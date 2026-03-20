@@ -1,0 +1,11 @@
+#!/bin/bash
+# Resolve the tracker directory relative to this .app bundle
+TRACKER_DIR="$(dirname "$(dirname "$(dirname "$(dirname "$0")")")")"
+
+cd "$TRACKER_DIR"
+
+# Log to a file so you can inspect it if anything goes wrong
+LOG="$TRACKER_DIR/data/tracker.log"
+mkdir -p "$TRACKER_DIR/data"
+
+exec /opt/anaconda3/bin/python3 "$TRACKER_DIR/tracker.py" >> "$LOG" 2>&1

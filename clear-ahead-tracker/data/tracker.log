@@ -1,0 +1,55 @@
+2026-03-20 14:16:33,118 [tracker] INFO ============================================================
+2026-03-20 14:16:33,118 [tracker] INFO Clear Ahead Behavioral Tracker starting…
+2026-03-20 14:16:33,118 [tracker] INFO ============================================================
+2026-03-20 14:16:33,121 [storage] WARNING Recovered 1 crashed session(s)
+2026-03-20 14:16:33,121 [tracker] INFO Session 4 opened at 2026-03-20T14:16:33.121974
+2026-03-20 14:16:33,122 [monitors.calendar] INFO CalendarMonitor started
+2026-03-20 14:16:33,122 [monitors.apps] INFO AppMonitor started
+2026-03-20 14:16:33,123 [monitors.input] INFO InputMonitor started
+2026-03-20 14:16:33,125 [dashboard] INFO Dashboard running at http://127.0.0.1:7331
+2026-03-20 14:16:33,125 [tracker] INFO Dashboard → http://127.0.0.1:7331
+2026-03-20 14:16:33,125 [tracker] INFO All components started. Session ID: 4. Press Ctrl+C to stop.
+Exception in thread dashboard:
+Traceback (most recent call last):
+  File "/opt/anaconda3/lib/python3.13/threading.py", line 1043, in _bootstrap_inner
+    self.run()
+    ~~~~~~~~^^
+  File "/opt/anaconda3/lib/python3.13/threading.py", line 994, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/yolina/Desktop/Clear Ahead Labs/MVPs/v0_data_collect_MVP/clear-ahead-tracker/dashboard.py", line 377, in <lambda>
+    target=lambda: self.app.run(
+                   ~~~~~~~~~~~~^
+        host="127.0.0.1",
+        ^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+        use_reloader=False,
+        ^^^^^^^^^^^^^^^^^^^
+    ),
+    ^
+  File "/opt/anaconda3/lib/python3.13/site-packages/flask/app.py", line 662, in run
+    run_simple(t.cast(str, host), port, self, **options)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.13/site-packages/werkzeug/serving.py", line 1091, in run_simple
+    fd = int(os.environ["WERKZEUG_SERVER_FD"])
+             ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen os>", line 717, in __getitem__
+KeyError: 'WERKZEUG_SERVER_FD'
+2026-03-20 14:16:33,134 [monitors.input] INFO InputMonitor: event tap installed
+2026-03-20 14:18:13,841 [tracker] INFO ============================================================
+2026-03-20 14:18:13,841 [tracker] INFO Clear Ahead Behavioral Tracker starting…
+2026-03-20 14:18:13,841 [tracker] INFO ============================================================
+2026-03-20 14:18:13,844 [storage] WARNING Recovered 1 crashed session(s)
+2026-03-20 14:18:13,844 [tracker] INFO Session 5 opened at 2026-03-20T14:18:13.844256
+2026-03-20 14:18:13,844 [monitors.calendar] INFO CalendarMonitor started
+2026-03-20 14:18:13,844 [monitors.apps] INFO AppMonitor started
+2026-03-20 14:18:13,844 [monitors.input] INFO InputMonitor started
+2026-03-20 14:18:13,846 [dashboard] INFO Dashboard running at http://127.0.0.1:7331
+2026-03-20 14:18:13,846 [tracker] INFO Dashboard → http://127.0.0.1:7331
+2026-03-20 14:18:13,846 [tracker] INFO All components started. Session ID: 5. Press Ctrl+C to stop.
+ * Serving Flask app 'dashboard'
+ * Debug mode: off
+2026-03-20 14:18:13,853 [monitors.input] INFO InputMonitor: event tap installed
+2026-03-20 14:18:13,854 [werkzeug] INFO [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:7331
+2026-03-20 14:18:13,854 [werkzeug] INFO [33mPress CTRL+C to quit[0m

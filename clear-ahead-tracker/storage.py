@@ -275,6 +275,29 @@ class Storage:
             "SELECT * FROM sessions ORDER BY started_at DESC"
         ).fetchall()]
 
+    def get_recent_switches(self, limit: int = 100) -> list:
+        c = self._conn()
+        return [dict(r) for r in c.execute(
+            """SELECT cs.*, s.started_at as session_start
+               FROM context_switches cs
+               LEFT JOIN sessions s ON cs.session_id = s.id
+               WHERE cs.to_app != '<<tracker stopped>>'
+               ORDER BY cs.timestamp DESC LIMIT ?""",
+            (limit,),
+        ).fetchall()]
+
+    def get_recent_keystrokes(self, limit: int = 100) -> list:
+        c = self._conn()
+        return [dict(r) for r in c.execute(
+            "SELECT * FROM keystroke_metrics ORDER BY timestamp DESC LIMIT ?", (limit,)
+        ).fetchall()]
+
+    def get_calendar_events(self, limit: int = 50) -> list:
+        c = self._conn()
+        return [dict(r) for r in c.execute(
+            "SELECT * FROM calendar_events ORDER BY start_time DESC LIMIT ?", (limit,)
+        ).fetchall()]
+
     def get_all_for_export(self) -> dict:
         c = self._conn()
         return {

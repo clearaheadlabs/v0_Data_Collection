@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleName</key>
+    <string>Clear Ahead Tracker</string>
+    <key>CFBundleDisplayName</key>
+    <string>Clear Ahead Tracker</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.clearahead.tracker</string>
+    <key>CFBundleVersion</key>
+    <string>1.0</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0</string>
+    <key>CFBundleExecutable</key>
+    <string>Clear Ahead Tracker</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+
+    <!-- Menu bar only app — no Dock icon -->
+    <key>LSUIElement</key>
+    <true/>
+
+    <!-- Allow running without being in /Applications -->
+    <key>LSMinimumSystemVersion</key>
+    <string>12.0</string>
+
+    <key>NSHighResolutionCapable</key>
+    <true/>
+
+    <!-- Permission descriptions shown in System Settings -->
+    <key>NSCalendarsUsageDescription</key>
+    <string>Clear Ahead reads calendar events to help track your schedule patterns.</string>
+    <key>NSAppleEventsUsageDescription</key>
+    <string>Clear Ahead monitors which apps are active to track context switches.</string>
+</dict>
+</plist>
