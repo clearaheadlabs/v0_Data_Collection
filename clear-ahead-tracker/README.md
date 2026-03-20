@@ -1,64 +1,99 @@
 # Clear Ahead Behavioral Tracker
+**v0.1 — March 2026**
 
-macOS passive behavior data collector. No content captured — timing and metadata only.
+Passive macOS behavior data collector. No inference, no recommendations — pure signal capture to validate what's technically feasible to track from a personal computer.
 
-## Setup
+---
 
-```bash
-pip install -r requirements.txt
-```
+## What It Does
 
-## Run
+Runs silently in the background. Captures behavioral signals from your Mac every minute/5 minutes and stores everything locally in a SQLite database. A lightweight web dashboard lets you see what's been collected.
 
-```bash
-# Full app with menubar indicator
-python tracker.py
+---
 
-# Headless (no menubar, good for testing)
-python tracker.py --no-menubar
-```
+## What It Records
 
-## Dashboard
-
-Open http://127.0.0.1:7331 in any browser.
-
-- Refreshes every 30 seconds
-- Shows today's counts: calendar events, context switches, keystrokes
-- Live CPU/RAM usage of the tracker itself
-- Top 5 apps by switch count
-- **Export All Data (CSV)** button downloads everything
-
-## Permissions Required
-
-macOS will prompt for these the first time:
-
-| Permission | Used for |
+| Signal | Detail |
 |---|---|
-| Calendar | EventKit reads iCal events |
-| Accessibility | CGEventTap for keystroke timing |
+| **App switches** | Which app is active, how long, bundle ID, category |
+| **Keystroke timing** | Count, speed (CPM), avg latency, backspaces, modifier keys, burst pauses, rhythm variance — never content |
+| **Mouse** | Movement distance, click count by type, scroll, idle time |
+| **Calendar** | Events from iCal, duration, attendee count, meeting vs focus |
+| **System** | CPU (system + tracker), RAM, battery, disk I/O, network bytes |
+| **Network** | Bytes sent/received, VPN active, WiFi signal strength |
+| **Audio** | Speaker volume, mute state |
+| **Sessions** | Every on/off cycle logged with start, end, duration, clean vs crash |
 
-If denied, that monitor silently skips — the rest keeps running.
+---
 
-## Privacy
+## What It Does NOT Record
 
-- **Keystrokes**: only count and inter-key latency per minute. Key identity/content is never stored.
-- **Mouse**: last-active timestamp only (idle detection).
-- **Apps**: app name only (via NSWorkspace.frontmostApplication).
-- **Calendar**: event title, start/end times, duration.
-- **No network calls**: all data stays in `data/tracker.db`.
+- Keystroke content (what you type)
+- Screenshots or screen recording
+- Browser history or URLs
+- Email, message, or document content
+- Clipboard
+- Webcam or microphone audio
+
+---
+
+## How to Run
+
+Double-click **`Clear Ahead Tracker.app`** — no Terminal needed.
+
+- Menu bar shows `● CPU%` while running
+- Click menu bar → **Open Dashboard** or **Quit Tracker**
+- Dashboard at `http://127.0.0.1:7331`
+
+---
+
+## Dashboard Pages
+
+| Page | What's there |
+|---|---|
+| **Today** | Summary cards, top apps, today's sessions |
+| **Data Log** | Raw tables — app switches, keystrokes, calendar |
+| **Sessions** | Every run with start/end/duration/status |
+| **Signal Status** | Live status of all 28 signals (active / no permission / unavailable) |
+
+---
 
 ## Database
 
-SQLite at `data/tracker.db`. Tables:
+SQLite at `data/tracker.db`. Open with **SQLite Viewer** extension in VS Code or DB Browser for SQLite.
 
-- `calendar_events` — synced from iCal (±1 day past, +7 days future)
-- `context_switches` — every app switch with duration
-- `keystroke_metrics` — per-minute bucket (count, avg latency ms, backspace count)
-- `system_metrics` — tracker CPU/RAM every 5 minutes
+Tables: `sessions`, `context_switches`, `keystroke_metrics`, `system_metrics`, `calendar_events`
 
-## Performance Targets
+Every row has a `session_id` — each app launch is one session.
 
-- CPU: < 5%
-- RAM: < 150 MB
-- App polling: 1-second resolution
-- Keystroke flush: every 60 seconds
+---
+
+## Permissions Required
+
+| Permission | For |
+|---|---|
+| **Accessibility** | Keyboard timing + mouse tracking (CGEventTap) |
+| **Calendar** | iCal event sync (EventKit) |
+
+Grant in System Settings → Privacy & Security. Without them, those signals are skipped — everything else still runs.
+
+---
+
+## Current Signal Coverage
+
+Run `python3 tests/test_signals.py` to see live status of all 28 signals.
+
+- **13/28 active** without any permissions granted
+- **26/28 active** once Accessibility + Calendar are granted
+- **2/28 unavailable**: display brightness (private IOKit), WiFi signal (only when on WiFi)
+
+---
+
+## Limitations
+
+- Requires macOS 12+
+- Python 3.11+ with Anaconda (`/opt/anaconda3`)
+- Display brightness not accessible without disabling SIP
+- App category mapping covers ~60 common apps; unknown apps tagged `other`
+- System metrics collected every 5 min (not real-time)
+- No cloud sync — all data local only

@@ -146,3 +146,42 @@ KeyError: 'WERKZEUG_SERVER_FD'
 2026-03-20 14:43:49,988 [werkzeug] INFO [33mPress CTRL+C to quit[0m
 2026-03-20 14:43:49,991 [monitors.input] INFO InputMonitor: event tap installed
 2026-03-20 14:44:13,345 [werkzeug] INFO 127.0.0.1 - - [20/Mar/2026 14:44:13] "GET /log HTTP/1.1" 200 -
+2026-03-20 14:49:56,972 [tracker] INFO ============================================================
+2026-03-20 14:49:56,972 [tracker] INFO Clear Ahead Behavioral Tracker starting…
+2026-03-20 14:49:56,972 [tracker] INFO ============================================================
+2026-03-20 14:49:56,976 [storage] WARNING Recovered 1 crashed session(s)
+2026-03-20 14:49:56,976 [tracker] INFO Session 9 opened
+2026-03-20 14:49:56,976 [monitors.calendar] INFO CalendarMonitor started
+2026-03-20 14:49:56,976 [monitors.apps] INFO AppMonitor started
+2026-03-20 14:49:56,977 [monitors.input] INFO InputMonitor started
+2026-03-20 14:49:56,977 [monitors.system_ext] INFO SystemExtMonitor started
+2026-03-20 14:49:56,979 [dashboard] INFO Dashboard running at http://127.0.0.1:7331
+2026-03-20 14:49:56,979 [tracker] INFO Dashboard → http://127.0.0.1:7331
+2026-03-20 14:49:56,979 [tracker] INFO All components running. Session ID: 9
+ * Serving Flask app 'dashboard'
+ * Debug mode: off
+2026-03-20 14:49:56,986 [werkzeug] INFO [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:7331
+2026-03-20 14:49:56,986 [werkzeug] INFO [33mPress CTRL+C to quit[0m
+2026-03-20 14:49:56,987 [monitors.input] INFO InputMonitor: event tap installed
+2026-03-20 14:50:04,950 [tracker] INFO Shutting down (clean)…
+2026-03-20 14:50:04,953 [tracker] INFO Session 9 closed. All data saved.
+2026-03-20 14:50:11,321 [tracker] INFO ============================================================
+2026-03-20 14:50:11,321 [tracker] INFO Clear Ahead Behavioral Tracker starting…
+2026-03-20 14:50:11,321 [tracker] INFO ============================================================
+2026-03-20 14:50:11,323 [tracker] INFO Session 10 opened
+2026-03-20 14:50:11,324 [monitors.calendar] INFO CalendarMonitor started
+2026-03-20 14:50:11,324 [monitors.apps] INFO AppMonitor started
+2026-03-20 14:50:11,324 [monitors.input] INFO InputMonitor started
+2026-03-20 14:50:11,324 [monitors.system_ext] INFO SystemExtMonitor started
+2026-03-20 14:50:11,326 [dashboard] INFO Dashboard running at http://127.0.0.1:7331
+2026-03-20 14:50:11,326 [tracker] INFO Dashboard → http://127.0.0.1:7331
+2026-03-20 14:50:11,326 [tracker] INFO All components running. Session ID: 10
+ * Serving Flask app 'dashboard'
+ * Debug mode: off
+2026-03-20 14:50:11,331 [werkzeug] INFO [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:7331
+2026-03-20 14:50:11,331 [werkzeug] INFO [33mPress CTRL+C to quit[0m
+2026-03-20 14:50:11,335 [monitors.input] INFO InputMonitor: event tap installed
+2026-03-20 14:50:14,432 [tracker] INFO Shutting down (clean)…
+2026-03-20 14:50:14,434 [tracker] INFO Session 10 closed. All data saved.
