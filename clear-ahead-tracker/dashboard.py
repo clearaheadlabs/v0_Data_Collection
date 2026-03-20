@@ -56,6 +56,14 @@ tr:last-child td { border-bottom: none; }
 .btn:hover { background: #0077ed; }
 .ts  { font-size: .72rem; color: #aeaeb2; margin-top: 1.5rem; }
 .dur { color: #6e6e73; font-size: .8rem; }
+.dot { display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle; }
+.dot-active       { background:#34c759; }
+.dot-no_permission{ background:#ff9500; }
+.dot-unavailable  { background:#aeaeb2; }
+.dot-failed       { background:#ff3b30; }
+.dot-starting     { background:#007aff; animation:pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+.sig-error { font-size:.72rem; color:#6e6e73; margin-top:.15rem; }
 </style>
 """
 
@@ -66,6 +74,7 @@ _NAV = """
     <a href="/" class="{{ 'active' if page == 'today' }}">Today</a>
     <a href="/log" class="{{ 'active' if page == 'log' }}">Data Log</a>
     <a href="/sessions" class="{{ 'active' if page == 'sessions' }}">Sessions</a>
+    <a href="/status" class="{{ 'active' if page == 'status' }}">Signal Status</a>
   </nav>
   <span style="margin-left:auto;font-size:.8rem;color:#aeaeb2;">Auto-refresh 30s</span>
 </div>
@@ -251,6 +260,74 @@ _LOG_HTML = """<!DOCTYPE html>
 </div></body></html>
 """
 
+# ── Signal Status page ───────────────────────────────────────────────────────
+_STATUS_HTML = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Clear Ahead — Signal Status</title>
+<meta http-equiv="refresh" content="15">
+""" + _BASE_CSS + """
+</head>
+<body>
+""" + _NAV + """
+<div class="page">
+
+<div class="grid" style="grid-template-columns:repeat(5,1fr)">
+  <div class="card">
+    <div class="label">Active</div>
+    <div class="value" style="color:#34c759">{{ summary.active }}</div>
+  </div>
+  <div class="card">
+    <div class="label">No Permission</div>
+    <div class="value" style="color:#ff9500">{{ summary.no_permission }}</div>
+  </div>
+  <div class="card">
+    <div class="label">Unavailable</div>
+    <div class="value" style="color:#aeaeb2">{{ summary.unavailable }}</div>
+  </div>
+  <div class="card">
+    <div class="label">Failed</div>
+    <div class="value" style="color:#ff3b30">{{ summary.failed }}</div>
+  </div>
+  <div class="card">
+    <div class="label">Starting</div>
+    <div class="value" style="color:#007aff">{{ summary.starting }}</div>
+  </div>
+</div>
+
+{% set categories = signals | map(attribute='category') | unique | list %}
+{% for cat in categories %}
+<h2>{{ cat }}</h2>
+<div class="tbl-wrap"><table>
+  <thead><tr><th style="width:28px"></th><th>Signal</th><th>Status</th><th>Events Today</th><th>Last Captured</th><th>Description</th></tr></thead>
+  <tbody>
+  {% for s in signals if s.category == cat %}
+  <tr>
+    <td><span class="dot dot-{{ s.status }}"></span></td>
+    <td><strong>{{ s.name }}</strong></td>
+    <td>
+      {% if s.status == 'active' %}<span class="badge badge-active">active</span>
+      {% elif s.status == 'no_permission' %}<span class="badge badge-crash">no permission</span>
+      {% elif s.status == 'unavailable' %}<span class="badge" style="background:#f2f2f7;color:#aeaeb2">unavailable</span>
+      {% elif s.status == 'failed' %}<span class="badge" style="background:#ffedec;color:#ff3b30">failed</span>
+      {% else %}<span class="badge" style="background:#dff0ff;color:#007aff">starting…</span>
+      {% endif %}
+      {% if s.error %}<div class="sig-error">{{ s.error[:80] }}</div>{% endif %}
+    </td>
+    <td>{{ s.events_today if s.events_today else "—" }}</td>
+    <td class="dur">{{ s.last_event or "—" }}</td>
+    <td style="color:#6e6e73;font-size:.8rem">{{ s.description }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% endfor %}
+
+<p class="ts">Last updated: {{ now }} &nbsp;·&nbsp; Auto-refreshes every 15 s</p>
+</div></body></html>
+"""
+
 # ── Sessions page ─────────────────────────────────────────────────────────────
 _SESSIONS_HTML = """<!DOCTYPE html>
 <html lang="en">
@@ -299,15 +376,17 @@ _SESSIONS_HTML = """<!DOCTYPE html>
 
 
 class Dashboard:
-    def __init__(self, storage, port: int = 7331):
+    def __init__(self, storage, registry=None, port: int = 7331):
         self.storage = storage
+        self.registry = registry
         self.port = port
         self.app = Flask(__name__)
         self._thread: threading.Thread | None = None
         self._register_routes()
 
     def _register_routes(self):
-        storage = self.storage
+        storage  = self.storage
+        registry = self.registry
 
         @self.app.route("/")
         def index():
@@ -334,6 +413,18 @@ class Dashboard:
                 rows=rows,
                 tab=tab,
                 page="log",
+                now=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            )
+
+        @self.app.route("/status")
+        def status():
+            signals = registry.get_all() if registry else []
+            summary = registry.summary() if registry else {}
+            return render_template_string(
+                _STATUS_HTML,
+                signals=signals,
+                summary=summary,
+                page="status",
                 now=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             )
 
