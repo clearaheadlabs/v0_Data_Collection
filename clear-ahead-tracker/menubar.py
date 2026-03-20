@@ -1,9 +1,11 @@
 """Menubar status indicator using rumps."""
 
 import logging
+import sys
 import threading
 import time
 import webbrowser
+from typing import Callable, Optional
 
 import psutil
 
@@ -22,9 +24,11 @@ class MenubarApp:
 
     UPDATE_INTERVAL = 10  # seconds between stat refreshes
 
-    def __init__(self, storage, dashboard_port: int = 7331):
+    def __init__(self, storage, dashboard_port: int = 7331,
+                 shutdown_fn: Optional[Callable] = None):
         self.storage = storage
         self.dashboard_port = dashboard_port
+        self.shutdown_fn = shutdown_fn
         self._proc = psutil.Process()
         self._app: "rumps.App | None" = None
 
@@ -35,20 +39,17 @@ class MenubarApp:
             self._park_main_thread()
             return
 
-        self._app = rumps.App(
-            "🟢",
-            title="●",
-            quit_button="Quit Tracker",
-        )
+        # Use quit_button=None so we control the quit action ourselves
+        self._app = rumps.App("●", quit_button=None)
         self._app.menu = [
             rumps.MenuItem("Open Dashboard", callback=self._open_dashboard),
             rumps.separator,
-            rumps.MenuItem("CPU: …", callback=None),
-            rumps.MenuItem("RAM: …", callback=None),
+            rumps.MenuItem("CPU: …"),
+            rumps.MenuItem("RAM: …"),
             rumps.separator,
+            rumps.MenuItem("Quit Tracker", callback=self._quit),
         ]
 
-        # Background thread to refresh menu stats
         t = threading.Thread(target=self._refresh_loop, daemon=True, name="menubar-refresh")
         t.start()
 
@@ -56,6 +57,12 @@ class MenubarApp:
 
     def _open_dashboard(self, _=None):
         webbrowser.open(f"http://127.0.0.1:{self.dashboard_port}")
+
+    def _quit(self, _=None):
+        """Flush all data before exiting."""
+        if self.shutdown_fn:
+            self.shutdown_fn("clean")
+        rumps.quit_application()
 
     def _refresh_loop(self):
         while True:
@@ -72,7 +79,6 @@ class MenubarApp:
 
     @staticmethod
     def _park_main_thread():
-        """When rumps is not available, keep main thread alive."""
         try:
             while True:
                 time.sleep(60)

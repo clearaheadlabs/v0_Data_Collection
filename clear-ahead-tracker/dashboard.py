@@ -93,6 +93,35 @@ _HTML = """
   </tbody>
 </table>
 
+<h2 style="font-size:1.1rem;font-weight:600;margin-bottom:.75rem;">Sessions Today</h2>
+<table>
+  <thead><tr><th>ID</th><th>Started</th><th>Ended</th><th>Duration</th><th>Status</th></tr></thead>
+  <tbody>
+  {% for s in summary.sessions_today %}
+  <tr>
+    <td>#{{ s.id }}</td>
+    <td>{{ s.started_at[:19] }}</td>
+    <td>{{ s.ended_at[:19] if s.ended_at else "—" }}</td>
+    <td>
+      {% if s.duration_seconds %}
+        {% set h = s.duration_seconds // 3600 %}
+        {% set m = (s.duration_seconds % 3600) // 60 %}
+        {% set sec = s.duration_seconds % 60 %}
+        {% if h %}{{ h }}h {% endif %}{{ m }}m {{ sec }}s
+      {% else %}running…{% endif %}
+    </td>
+    <td>
+      {% if s.end_reason == 'clean' %}✅ clean
+      {% elif s.end_reason == 'crash' %}⚠️ crash
+      {% else %}🟢 active{% endif %}
+    </td>
+  </tr>
+  {% else %}
+  <tr><td colspan="5" style="color:#aeaeb2;text-align:center;padding:2rem;">No sessions today</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
 <a class="btn" href="/export/csv">Export All Data (CSV)</a>
 
 <p class="ts">Last updated: {{ now }} &nbsp;·&nbsp; Auto-refreshes every 30 s</p>

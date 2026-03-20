@@ -40,8 +40,9 @@ class InputMonitor:
 
     FLUSH_INTERVAL = 60  # seconds between DB writes
 
-    def __init__(self, storage):
+    def __init__(self, storage, session_id: int):
         self.storage = storage
+        self.session_id = session_id
 
         # Keystroke state
         self._key_times: deque = deque(maxlen=500)
@@ -80,6 +81,8 @@ class InputMonitor:
         logger.info("InputMonitor started")
 
     def stop(self):
+        """Flush any buffered keystrokes before stopping so nothing is lost."""
+        self._flush_metrics()  # drain buffer first
         self._stop_event.set()
         if self._tap:
             try:
@@ -158,7 +161,8 @@ class InputMonitor:
     def _flush_loop(self):
         while not self._stop_event.is_set():
             self._stop_event.wait(self.FLUSH_INTERVAL)
-            self._flush_metrics()
+            if not self._stop_event.is_set():  # skip scheduled flush if stop() already flushed
+                self._flush_metrics()
 
     def _flush_metrics(self):
         with self._key_lock:
@@ -184,7 +188,7 @@ class InputMonitor:
 
         try:
             self.storage.insert_keystroke_metrics(
-                datetime.now(), count, round(avg_latency, 2), backspaces
+                self.session_id, datetime.now(), count, round(avg_latency, 2), backspaces
             )
             logger.debug(
                 f"InputMonitor flush: {count} keys, {avg_latency:.1f}ms avg, {backspaces} backspaces"

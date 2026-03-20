@@ -22,8 +22,9 @@ class CalendarMonitor:
 
     SYNC_INTERVAL = 300  # seconds between full syncs
 
-    def __init__(self, storage):
+    def __init__(self, storage, session_id: int):
         self.storage = storage
+        self.session_id = session_id
         self._stop_event = threading.Event()
         self._thread: threading.Thread | None = None
         self._store = None
@@ -103,7 +104,7 @@ class CalendarMonitor:
                 start = self._from_nsdate(ev.startDate())
                 end = self._from_nsdate(ev.endDate())
                 duration = int((end - start).total_seconds() / 60)
-                self.storage.upsert_calendar_event(title, start, end, duration)
+                self.storage.upsert_calendar_event(self.session_id, title, start, end, duration)
                 synced += 1
             except Exception as e:
                 logger.debug(f"Skipping event: {e}")

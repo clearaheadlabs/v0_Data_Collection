@@ -23,7 +23,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger("tracker")
 
-# ── Local imports ─────────────────────────────────────────────────────────────
 from storage import Storage
 from monitors.calendar import CalendarMonitor
 from monitors.apps import AppMonitor
@@ -35,15 +34,19 @@ DASHBOARD_PORT = 7331
 SYSTEM_METRICS_INTERVAL = 300  # 5 minutes
 
 
-def collect_system_metrics(storage: Storage, stop_event: threading.Event):
+def collect_system_metrics(storage: Storage, session_id: int, stop_event: threading.Event):
     """Background thread: record tracker's own CPU/RAM every 5 minutes."""
     proc = psutil.Process()
+    # Initial reading — cpu_percent needs a prior call to calibrate
+    proc.cpu_percent(interval=None)
     while not stop_event.is_set():
         stop_event.wait(SYSTEM_METRICS_INTERVAL)
+        if stop_event.is_set():
+            break
         try:
             cpu = proc.cpu_percent(interval=1)
             mem_mb = int(proc.memory_info().rss / 1024 / 1024)
-            storage.insert_system_metrics(datetime.now(), cpu, mem_mb)
+            storage.insert_system_metrics(session_id, datetime.now(), cpu, mem_mb)
             logger.info(f"System metrics — CPU: {cpu:.1f}%  RAM: {mem_mb} MB")
         except Exception as e:
             logger.error(f"System metrics error: {e}")
@@ -59,12 +62,20 @@ def main():
     logger.info("=" * 60)
 
     storage = Storage()
+
+    # ── Recover any sessions that crashed without closing ─────────────
+    storage.recover_crashed_sessions()
+
+    # ── Open a new session for this run ──────────────────────────────
+    session_id = storage.open_session()
+    logger.info(f"Session {session_id} opened at {datetime.now().isoformat()}")
+
     stop_event = threading.Event()
 
     # ── Start monitors ────────────────────────────────────────────────
-    calendar_monitor = CalendarMonitor(storage)
-    app_monitor = AppMonitor(storage)
-    input_monitor = InputMonitor(storage)
+    calendar_monitor = CalendarMonitor(storage, session_id)
+    app_monitor = AppMonitor(storage, session_id)
+    input_monitor = InputMonitor(storage, session_id)
 
     calendar_monitor.start()
     app_monitor.start()
@@ -73,7 +84,7 @@ def main():
     # ── System metrics collector ──────────────────────────────────────
     sys_thread = threading.Thread(
         target=collect_system_metrics,
-        args=(storage, stop_event),
+        args=(storage, session_id, stop_event),
         daemon=True,
         name="sys-metrics",
     )
@@ -85,19 +96,27 @@ def main():
     logger.info(f"Dashboard → http://127.0.0.1:{DASHBOARD_PORT}")
 
     # ── Graceful shutdown ─────────────────────────────────────────────
-    def shutdown(signum, frame):
-        logger.info("Shutdown signal received, stopping monitors…")
+    def shutdown(reason: str = "clean"):
+        logger.info(f"Shutting down (reason={reason})…")
         stop_event.set()
+
+        # Stop monitors — each flushes its buffer before returning
+        input_monitor.stop()   # flushes keystroke buffer
+        app_monitor.stop()     # writes final app duration
         calendar_monitor.stop()
-        app_monitor.stop()
-        input_monitor.stop()
-        logger.info("Clear Ahead Tracker stopped.")
+
+        # Mark session closed
+        storage.close_session(session_id, reason=reason)
+        logger.info(f"Session {session_id} closed. All data saved.")
+
+    def signal_handler(_signum, _frame):
+        shutdown("clean")
         sys.exit(0)
 
-    signal.signal(signal.SIGINT, shutdown)
-    signal.signal(signal.SIGTERM, shutdown)
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
 
-    logger.info("All components started. Press Ctrl+C to stop.")
+    logger.info(f"All components started. Session ID: {session_id}. Press Ctrl+C to stop.")
 
     # ── Menubar (blocks on main thread) or headless ───────────────────
     if args.no_menubar:
@@ -105,10 +124,10 @@ def main():
             while True:
                 time.sleep(60)
         except KeyboardInterrupt:
-            shutdown(None, None)
+            shutdown("clean")
     else:
-        menubar = MenubarApp(storage, dashboard_port=DASHBOARD_PORT)
-        menubar.run()  # blocks until quit
+        menubar = MenubarApp(storage, dashboard_port=DASHBOARD_PORT, shutdown_fn=shutdown)
+        menubar.run()  # blocks until quit; calls shutdown internally
 
 
 if __name__ == "__main__":
